@@ -33,25 +33,39 @@ or implied, of Rafael Muñoz Salinas.
 #include "exports.h"
 #include "marker.h"
 using namespace std;
-namespace aruco {
-/**
+namespace aruco
+{
+    /**
  * 3d representation of a marker
  */
-struct ARUCO_EXPORTS Marker3DInfo : public vector< cv::Point3f > {
-    Marker3DInfo() {}
-    Marker3DInfo(int _id) { id = _id; }
-    bool operator==(const Marker3DInfo &MI) {return id==MI.id;}
-    int id; // maker id
+    struct ARUCO_EXPORTS Marker3DInfo : public vector<cv::Point3f>
+    {
+        Marker3DInfo() {}
+        Marker3DInfo(int _id) { id = _id; }
+        bool operator==(const Marker3DInfo &MI) { return id == MI.id; }
+        int id; // maker id
 
-    //returns the distance of the marker side
-    float getMarkerSize()const{return cv::norm(at(0)-at(1));}
-public:
-    void toStream(std::ostream &str){str<<id<<" "<<size()<<" ";for(size_t i=0;i<size();i++) str<<at(i).x<<" "<<at(i).y<<" "<<at(i).z<<" ";}
-    void fromStream(std::istream &str){int s;str>>id>>s;resize(s);for(size_t i=0;i<size();i++) str>>at(i).x>>at(i).y>>at(i).z;}
+        //returns the distance of the marker side
+        float getMarkerSize() const { return cv::norm(at(0) - at(1)); }
 
-};
+    public:
+        void toStream(std::ostream &str)
+        {
+            str << id << " " << size() << " ";
+            for (size_t i = 0; i < size(); i++)
+                str << at(i).x << " " << at(i).y << " " << at(i).z << " ";
+        }
+        void fromStream(std::istream &str)
+        {
+            int s;
+            str >> id >> s;
+            resize(s);
+            for (size_t i = 0; i < size(); i++)
+                str >> at(i).x >> at(i).y >> at(i).z;
+        }
+    };
 
-/**\brief This class defines a set of markers whose locations are attached to a common reference system, i.e., they do not move wrt each other.
+    /**\brief This class defines a set of markers whose locations are attached to a common reference system, i.e., they do not move wrt each other.
  * A MarkerMap contains several markers so that they are more robustly detected.
  *
  * A MarkerMap is only a list  of the id of the markers along with the position of their corners.
@@ -67,98 +81,92 @@ public:
  *
 */
 
+    class ARUCO_EXPORTS MarkerMap : public vector<Marker3DInfo>
+    {
 
-class ARUCO_EXPORTS MarkerMap : public vector< Marker3DInfo > {
-
-
-public:
-
-    /**
+    public:
+        /**
      */
-    MarkerMap();
+        MarkerMap();
 
-    /**Loads from file
+        /**Loads from file
      * @param filePath to the config file
      */
-    MarkerMap(string filePath) throw(cv::Exception);
+        MarkerMap(string filePath);
 
-    /**Indicates if the corners are expressed in meters
+        /**Indicates if the corners are expressed in meters
      */
-    bool isExpressedInMeters() const { return mInfoType == METERS; }
-    /**Indicates if the corners are expressed in meters
+        bool isExpressedInMeters() const { return mInfoType == METERS; }
+        /**Indicates if the corners are expressed in meters
      */
-    bool isExpressedInPixels() const { return mInfoType == PIX; }
-    /**converts the passed board into meters
+        bool isExpressedInPixels() const { return mInfoType == PIX; }
+        /**converts the passed board into meters
      */
-    MarkerMap convertToMeters( float markerSize)throw (cv::Exception);
-    //simple way of knowing which elements detected in an image are from this markermap
-    //returns the indices of the elements in the vector 'markers' that belong to this set
-    //Example: The set has the elements with ids 10,21,31,41,92
-    //The input vector has the markers with ids 10,88,9,12,41
-    //function returns {0,4}, because element 0 (10) of the vector belongs to the set, and also element 4 (41) belongs to the set
-    std::vector<int> getIndices(vector<aruco::Marker> &markers);
+        MarkerMap convertToMeters(float markerSize);
+        //simple way of knowing which elements detected in an image are from this markermap
+        //returns the indices of the elements in the vector 'markers' that belong to this set
+        //Example: The set has the elements with ids 10,21,31,41,92
+        //The input vector has the markers with ids 10,88,9,12,41
+        //function returns {0,4}, because element 0 (10) of the vector belongs to the set, and also element 4 (41) belongs to the set
+        std::vector<int> getIndices(vector<aruco::Marker> &markers);
 
-    /**Returns the Info of the marker with id specified. If not in the set, throws exception
+        /**Returns the Info of the marker with id specified. If not in the set, throws exception
      */
-    const Marker3DInfo &getMarker3DInfo(int id) const throw(cv::Exception);
+        const Marker3DInfo &getMarker3DInfo(int id) const;
 
-    /**Returns the index of the marker (in this object) with id indicated, if is in the vector
+        /**Returns the index of the marker (in this object) with id indicated, if is in the vector
      */
-    int getIndexOfMarkerId(int id) const;
-    /**Set in the list passed the set of the ids
+        int getIndexOfMarkerId(int id) const;
+        /**Set in the list passed the set of the ids
      */
-    void getIdList(vector< int > &ids, bool append = true) const;
+        void getIdList(vector<int> &ids, bool append = true) const;
 
-
-    /**Returns an image of this to be printed. This object must be in pixels @see isExpressedInPixels(). If not,please provide the METER2PIX conversion parameter
+        /**Returns an image of this to be printed. This object must be in pixels @see isExpressedInPixels(). If not,please provide the METER2PIX conversion parameter
         */
-    cv::Mat getImage(float METER2PIX=0)const throw (cv::Exception);
+        cv::Mat getImage(float METER2PIX = 0) const;
 
-
-    /**Saves the board info to a file
+        /**Saves the board info to a file
     */
-    void saveToFile(string sfile) throw(cv::Exception);
-    /**Reads board info from a file
+        void saveToFile(string sfile);
+        /**Reads board info from a file
     */
-    void readFromFile(string sfile) throw(cv::Exception);
+        void readFromFile(string sfile);
 
+        //calculates the camera location w.r.t. the map using the information provided
+        //returns the <rvec,tvec>
+        pair<cv::Mat, cv::Mat> calculateExtrinsics(const std::vector<aruco::Marker> &markers, float markerSize, cv::Mat CameraMatrix, cv::Mat Distorsion);
 
+        //returns string indicating the dictionary
+        std::string getDictionary() const { return dictionary; }
 
-    //calculates the camera location w.r.t. the map using the information provided
-    //returns the <rvec,tvec>
-    pair<cv::Mat,cv::Mat> calculateExtrinsics(const std::vector<aruco::Marker> &markers ,float markerSize, cv::Mat CameraMatrix, cv::Mat Distorsion   ) throw(cv::Exception);
+        enum Marker3DInfoType
+        {
+            NONE = -1,
+            PIX = 0,
+            METERS = 1
+        }; // indicates if the data in MakersInfo is expressed in meters or in pixels so as to do conversion internally
+        //returns string indicating the dictionary
+        void setDictionary(std::string d) { dictionary = d; }
 
-    //returns string indicating the dictionary
-    std::string getDictionary()const{return dictionary;}
+        // variable indicates if the data in MakersInfo is expressed in meters or in pixels so as to do conversion internally
+        int mInfoType;
 
+    private:
+        //dictionary it belongs to (if any)
+        std::string dictionary;
 
-    enum Marker3DInfoType {
-        NONE = -1,
-        PIX = 0,
-        METERS = 1
-    }; // indicates if the data in MakersInfo is expressed in meters or in pixels so as to do conversion internally
-    //returns string indicating the dictionary
-    void setDictionary(std::string  d){dictionary=d;}
-
-
-    // variable indicates if the data in MakersInfo is expressed in meters or in pixels so as to do conversion internally
-    int mInfoType;
-private:
-    //dictionary it belongs to (if any)
-    std::string dictionary;
-
-
-private:
-    /**Saves the board info to a file
+    private:
+        /**Saves the board info to a file
     */
-    void saveToFile(cv::FileStorage &fs) throw(cv::Exception);
-    /**Reads board info from a file
+        void saveToFile(cv::FileStorage &fs);
+        /**Reads board info from a file
     */
-    void readFromFile(cv::FileStorage &fs) throw(cv::Exception);
-public:
-    void toStream(std::ostream &str);
-    void fromStream(std::istream &str);
-};
+        void readFromFile(cv::FileStorage &fs);
+
+    public:
+        void toStream(std::ostream &str);
+        void fromStream(std::istream &str);
+    };
 
 }
 

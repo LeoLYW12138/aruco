@@ -33,9 +33,10 @@ or implied, of Rafael Muñoz Salinas.
 #include "markermap.h"
 #include "cameraparameters.h"
 #include <map>
-namespace aruco{
+namespace aruco
+{
 
-/**Tracks the position of a marker. Instead of trying to calculate the position from scratch everytime, it uses past observations to
+  /**Tracks the position of a marker. Instead of trying to calculate the position from scratch everytime, it uses past observations to
  * estimate the pose. It should solve the problem with ambiguities that arises in some circumstances
  *
  * To solve ambiguity we follow the following idea. We are using the IPPE method, which returns the two possible solutions s0,s1.
@@ -54,7 +55,8 @@ namespace aruco{
  *
  * If you do not want to risk, I recommen using more conservative approach, use a value of er=4.
  */
-class ARUCO_EXPORTS MarkerPoseTracker{
+  class ARUCO_EXPORTS MarkerPoseTracker
+  {
   public:
     /**     estimate the pose of the marker.
      * @brief estimatePose
@@ -64,54 +66,53 @@ class ARUCO_EXPORTS MarkerPoseTracker{
      * @param minErrorRatio see explanation above. If you want to be conservative, use minErrorRatio=4.
      * @return true if the pose is estimated and false otherwise. If not estimated, the parameters m.Rvec and m.Tvec and not set.
      */
-    bool estimatePose(  Marker &m,const  CameraParameters &cam_params,float markerSize,float minErrorRatio=4);
+    bool estimatePose(Marker &m, const CameraParameters &cam_params, float markerSize, float minErrorRatio = 4);
 
     //returns the 4x4 transform matrix. Returns an empty matrix if last call to estimatePose returned false
-    cv::Mat getRTMatrix()const;
+    cv::Mat getRTMatrix() const;
     //return the rotation vector. Returns an empty matrix if last call to estimatePose returned false
-    const cv::Mat getRvec()const{return _rvec;}
+    const cv::Mat getRvec() const { return _rvec; }
     //return the translation vector. Returns an empty matrix if last call to estimatePose returned false
-    const cv::Mat getTvec()const{return _tvec;}
+    const cv::Mat getTvec() const { return _tvec; }
 
   private:
-    cv::Mat _rvec,_tvec;//current poses
-     double  solve_pnp(const std::vector<cv::Point3f> & p3d,const std::vector<cv::Point2f> & p2d,const cv::Mat &cam_matrix,const cv::Mat &dist,cv::Mat &r_io,cv::Mat &t_io);
-
-};
-/**Tracks the position of a markermap
+    cv::Mat _rvec, _tvec; //current poses
+    double solve_pnp(const std::vector<cv::Point3f> &p3d, const std::vector<cv::Point2f> &p2d, const cv::Mat &cam_matrix, const cv::Mat &dist, cv::Mat &r_io, cv::Mat &t_io);
+  };
+  /**Tracks the position of a markermap
  */
 
-class ARUCO_EXPORTS MarkerMapPoseTracker{
+  class ARUCO_EXPORTS MarkerMapPoseTracker
+  {
 
-public:
+  public:
     MarkerMapPoseTracker();
     //Sets the parameters required for operation
     //If the msconf has data expressed in meters, then the markerSize parameter is not required. If it is in pixels, the markersize will be used to
     //transform to meters
     //Throws exception if wrong configuraiton
-    void setParams(const  CameraParameters &cam_params,const MarkerMap &msconf, float markerSize=-1)throw(cv::Exception);
+    void setParams(const CameraParameters &cam_params, const MarkerMap &msconf, float markerSize = -1);
     //indicates if the call to setParams has been successfull and this object is ready to call estimatePose
-    bool isValid()const{return _isValid;}
+    bool isValid() const { return _isValid; }
     //estimates camera pose wrt the markermap
     //returns true if pose has been obtained and false otherwise
-    bool estimatePose(const  vector<Marker> &v_m);
+    bool estimatePose(const vector<Marker> &v_m);
 
     //returns the 4x4 transform matrix. Returns an empty matrix if last call to estimatePose returned false
-    cv::Mat getRTMatrix()const;
+    cv::Mat getRTMatrix() const;
     //return the rotation vector. Returns an empty matrix if last call to estimatePose returned false
-    const cv::Mat getRvec()const{return _rvec;}
+    const cv::Mat getRvec() const { return _rvec; }
     //return the translation vector. Returns an empty matrix if last call to estimatePose returned false
-    const cv::Mat getTvec()const{return _tvec;}
-private:
+    const cv::Mat getTvec() const { return _tvec; }
 
-    cv::Mat _rvec,_tvec;//current poses
+  private:
+    cv::Mat _rvec, _tvec; //current poses
     aruco::CameraParameters _cam_params;
     MarkerMap _msconf;
-    std::map<int,Marker3DInfo> _map_mm;
+    std::map<int, Marker3DInfo> _map_mm;
     bool _isValid;
-};
+  };
 
 };
 
 #endif
-
